@@ -435,10 +435,16 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             }
 
             if (data.success && data.data) {
+                
                 console.log("Customer lead data received:", data.data);
                 // Use the id from response as searchId
                 const searchId = data.data.id;
                 console.log("Using searchId from response:", searchId);
+                
+                // Ensure chatbotId is set from the verified customer lead
+                if (searchId) {
+                    setChatbotId(searchId);
+                }
                 
                 setCustomerLeadData(data.data);
 
@@ -2450,10 +2456,10 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             {(() => {
                                                 // Always show hours 1-12 regardless of AM/PM
                                                 return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((hour) => (
-                                                    <option key={hour} value={hour.toString().padStart(2, '0')}>
-                                                        {hour}
-                                                    </option>
-                                                ));
+                                                        <option key={hour} value={hour.toString().padStart(2, '0')}>
+                                                            {hour}
+                                                        </option>
+                                                    ));
                                             })()}
                                         </select>
 
