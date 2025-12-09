@@ -523,7 +523,14 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                 fetchCustomerLeadData(token);
             } else {
                 // Don't open dialog if no token is found
-                console.log("No token found in URL, not opening appointment dialog");
+                console.log("No token found in URL, opening appointment dialog");
+                // Avoid reopening if already open
+                if (!showAppointmentDialog) {
+                    // Ensure minimum date is set
+                    const minDate = getMinDate();
+                    setSelectedDate(minDate);
+                    setShowAppointmentDialog(true);
+                }
             }
         };
 
