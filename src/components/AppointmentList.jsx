@@ -49,6 +49,17 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
         }
     };
 
+    const buildFullAddress = (customer = {}) => {
+        const parts = [
+            customer.address,
+            customer.house_number,
+            customer.sector,
+            customer.city,
+            customer.state
+        ].filter(Boolean);
+        return parts.length ? parts.join(', ') : t('appointments.na');
+    };
+
     const handleViewDetails = (appointment) => {
         setSelectedAppointment(appointment);
     };
@@ -92,19 +103,13 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
                                     {t('appointments.appointmentId')}
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('appointments.customerName')}
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('appointments.contact')}
+                                    {t('appointments.customerInformation')}
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {t('appointments.dateTime')}
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {t('appointments.issue')}
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {t('appointments.address')}
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {t('appointments.status')}
@@ -129,18 +134,24 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <User className="h-4 w-4 text-gray-400 mr-2" />
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {customer.name || t('appointments.na')}
+                                            <div className="space-y-1 text-sm text-gray-900">
+                                                <div className="flex items-center gap-2">
+                                                    <User className="h-4 w-4 text-gray-400" />
+                                                    <span className="font-medium">
+                                                        {customer.name || t('appointments.na')}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                                                <div className="text-sm text-gray-900">
-                                                    {customer.contact_number || t('appointments.na')}
+                                                <div className="flex items-center gap-2">
+                                                    <Phone className="h-4 w-4 text-gray-400" />
+                                                    <span>{customer.contact_number || t('appointments.na')}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-4 w-4 text-gray-400">@</span>
+                                                    <span>{customer.email || t('appointments.na')}</span>
+                                                </div>
+                                                <div className="flex items-start gap-2">
+                                                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                                                    <span>{buildFullAddress(customer)}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -159,11 +170,6 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">
                                                 {service.customer_requirement || t('appointments.na')}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {customer.address || t('appointments.na')}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -228,7 +234,7 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
                                     <User className="h-5 w-5 mr-2 text-blue-600" />
                                     {t('appointments.customerInformation')}
                                 </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                                <div className="grid grid-cols-1 gap-4 bg-gray-50 p-4 rounded-lg">
                                     <div>
                                         <p className="text-xs text-gray-500 mb-1">{t('appointments.name')}</p>
                                         <p className="text-sm font-medium text-gray-900">
@@ -241,12 +247,29 @@ const AppointmentList = ({ appointments, onDeleteAppointment }) => {
                                             {selectedAppointment.customer?.contact_number || t('appointments.na')}
                                         </p>
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <p className="text-xs text-gray-500 mb-1">{t('appointments.address')}</p>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">{t('chatbot.customerEmail') || 'Email'}</p>
                                         <p className="text-sm font-medium text-gray-900">
-                                            {selectedAppointment.customer?.address || t('appointments.na')}
+                                            {selectedAppointment.customer?.email || t('appointments.na')}
                                         </p>
                                     </div>
+                                    <div className="md:col-span-2">
+                                        <p className="text-xs text-gray-500 mb-1">
+                                            {t('chatbot.fullAddress') || t('appointments.address')}
+                                        </p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {buildFullAddress(selectedAppointment.customer)}
+                                        </p>
+                                    </div>
+                                    {(selectedAppointment.customer?.latitude || selectedAppointment.customer?.longitude) && (
+                                        <div className="md:col-span-2">
+                                            <p className="text-xs text-gray-500 mb-1">{t('chatbot.coordinates') || 'Coordinates'}</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {selectedAppointment.customer?.latitude ? Number(selectedAppointment.customer.latitude).toFixed(6) : t('appointments.na')},{' '}
+                                                {selectedAppointment.customer?.longitude ? Number(selectedAppointment.customer.longitude).toFixed(6) : t('appointments.na')}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

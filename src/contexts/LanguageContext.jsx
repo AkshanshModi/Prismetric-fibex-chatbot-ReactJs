@@ -48,6 +48,7 @@ export const LanguageProvider = ({ children }) => {
         cancel: "Cancel",
         selectLocationAlert: "Please select a location on the map",
         myAddressIs: "My address is:",
+        searchAddressLabel: "Search Address",
         addressNotFound: "Address not found. Please try a different search term.",
         addressSearchError: "Error searching for address. Please try again.",
         coordinatesNotFound: "Your address coordinates were not found. Please edit the address using the 'Edit Address' button.",
@@ -100,6 +101,10 @@ export const LanguageProvider = ({ children }) => {
         addressSector: "Sector",
         addressCity: "City",
         addressState: "State",
+        fullAddress: "Full Address",
+        checkingViability: "Checking address availability...",
+        addressNotInstallable: "This address is not available for installation service.",
+        viabilityCheckError: "Unable to verify address availability. Please try again.",
       },
       // AppointmentList
       appointments: {
@@ -166,6 +171,7 @@ export const LanguageProvider = ({ children }) => {
         cancel: "Cancelar",
         selectLocationAlert: "Por favor, selecciona una ubicación en el mapa",
         myAddressIs: "Mi dirección es:",
+        searchAddressLabel: "Buscar Dirección",
         addressNotFound: "Dirección no encontrada. Por favor, intenta con un término de búsqueda diferente.",
         addressSearchError: "Error al buscar la dirección. Por favor, inténtalo de nuevo.",
         coordinatesNotFound: "No se encontraron las coordenadas de su dirección. Por favor, edite la dirección usando el botón 'Editar Dirección'.",
@@ -218,6 +224,10 @@ export const LanguageProvider = ({ children }) => {
         addressSector: "Sector",
         addressCity: "Ciudad",
         addressState: "Estado",
+        fullAddress: "Dirección completa",
+        checkingViability: "Verificando disponibilidad de la dirección...",
+        addressNotInstallable: "Esta dirección no está disponible para el servicio de instalación.",
+        viabilityCheckError: "No se pudo verificar la disponibilidad de la dirección. Por favor, inténtelo de nuevo.",
       },
       // AppointmentList
       appointments: {
