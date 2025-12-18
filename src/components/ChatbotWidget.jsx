@@ -7,6 +7,7 @@ import { SearchBox } from '@mapbox/search-js-react';
 
 
 
+
 // API Configuration - fallback URLs
 const API_CONFIG = {
     production: "http://27.54.168.101:4101",
@@ -103,12 +104,12 @@ const resolveInitialChatbotId = (explicitId) => {
 };
 
 // Custom Dropdown Component
-const CustomDropdown = ({ 
-    value, 
-    onChange, 
-    options = [], 
-    placeholder = "Select...", 
-    disabled = false, 
+const CustomDropdown = ({
+    value,
+    onChange,
+    options = [],
+    placeholder = "Select...",
+    disabled = false,
     error = false,
     className = "",
     minWidth = "auto",
@@ -167,7 +168,7 @@ const CustomDropdown = ({
             // Exclude placeholder options (empty value) from search results
             if (option.value === "") return false;
             return option.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                   (option.searchText && option.searchText.toLowerCase().includes(searchQuery.toLowerCase()));
+                (option.searchText && option.searchText.toLowerCase().includes(searchQuery.toLowerCase()));
         })
         : options;
 
@@ -195,20 +196,19 @@ const CustomDropdown = ({
                 type="button"
                 onClick={handleOpen}
                 disabled={disabled}
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between ${
-                    error ? 'border-red-500' : 'border-gray-300'
-                } ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white cursor-pointer hover:border-gray-400'}`}
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between ${error ? 'border-red-500' : 'border-gray-300'
+                    } ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white cursor-pointer hover:border-gray-400'}`}
             >
                 <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
                     {displayText}
                 </span>
-                <ChevronDown 
-                    className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} 
+                <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? 'transform rotate-180' : ''}`}
                 />
             </button>
-            
+
             {isOpen && !disabled && (
-                <div 
+                <div
                     className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 flex flex-col"
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
@@ -240,9 +240,8 @@ const CustomDropdown = ({
                                     type="button"
                                     onClick={() => handleSelect(option.value)}
                                     onMouseDown={(e) => e.stopPropagation()}
-                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${
-                                        value === option.value ? 'bg-blue-100 text-blue-900 font-medium' : 'text-gray-900'
-                                    }`}
+                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${value === option.value ? 'bg-blue-100 text-blue-900 font-medium' : 'text-gray-900'
+                                        }`}
                                 >
                                     {option.label}
                                 </button>
@@ -256,8 +255,8 @@ const CustomDropdown = ({
 };
 
 export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propChatbotId, id: propId }) {
-   
-    
+
+
     const { language, setLanguage, t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [sessionId, setSessionId] = useState('');
@@ -283,7 +282,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     const [selectedTime, setSelectedTime] = useState("");
     const [selectedHour, setSelectedHour] = useState("");
     const [selectedMinute, setSelectedMinute] = useState("");
-    const [selectedAmPm, setSelectedAmPm] = useState("AM");
+    const [selectedAmPm, setSelectedAmPm] = useState("PM");
     const [timeError, setTimeError] = useState("");
     const [appointmentLocation, setAppointmentLocation] = useState({ lat: null, lng: null, address: '' });
     const [appointmentSearchAddress, setAppointmentSearchAddress] = useState("");
@@ -296,6 +295,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     const [selectedCountryCode, setSelectedCountryCode] = useState("+58"); // Default to Venezuela
     const [editableCustomerEmail, setEditableCustomerEmail] = useState("");
     const [editableCustomerRequirement, setEditableCustomerRequirement] = useState("");
+    const [otherCustomerRequirement, setOtherCustomerRequirement] = useState(""); // For manual input when "Other" is selected
     const [editableHouseNumber, setEditableHouseNumber] = useState("");
     const [editableSector, setEditableSector] = useState("");
     const [editableCity, setEditableCity] = useState("");
@@ -339,11 +339,14 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     const appointmentMapContainerRef = useRef(null);
     const appointmentMapRef = useRef(null);
     const appointmentMarkerRef = useRef(null);
+    const customerIssuesFetchedRef = useRef(false);
+    const previousOtherRequirementRef = useRef("");
 
     // Common country codes list
     const countryCodes = [
         { code: "+58", country: "Venezuela", flag: "🇻🇪" },
-        { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+        { code: "+1", country: "USA", flag: "🇺🇸" },
+        { code: "+1", country: "Canada", flag: "CA" },
         { code: "+52", country: "Mexico", flag: "🇲🇽" },
         { code: "+57", country: "Colombia", flag: "🇨🇴" },
         { code: "+51", country: "Peru", flag: "🇵🇪" },
@@ -361,8 +364,8 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         { code: "+82", country: "South Korea", flag: "🇰🇷" },
         { code: "+61", country: "Australia", flag: "🇦🇺" },
         { code: "+27", country: "South Africa", flag: "🇿🇦" },
-        { code: "+971", country: "UAE", flag: "🇦🇪" },
-    
+
+
         // ---- Additional Countries ----
         { code: "+31", country: "Netherlands", flag: "🇳🇱" },
         { code: "+32", country: "Belgium", flag: "🇧🇪" },
@@ -407,9 +410,48 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         { code: "+234", country: "Nigeria", flag: "🇳🇬" },
         { code: "+254", country: "Kenya", flag: "🇰🇪" },
         { code: "+255", country: "Tanzania", flag: "🇹🇿" },
-        { code: "+251", country: "Ethiopia", flag: "🇪🇹" }
+        { code: "+251", country: "Ethiopia", flag: "🇪🇹" },
+
+        // ---- Asia ----
+        { code: "+93", country: "Afghanistan", flag: "🇦🇫" },
+        { code: "+977", country: "Nepal", flag: "🇳🇵" },
+        { code: "+95", country: "Myanmar", flag: "🇲🇲" },
+        { code: "+84", country: "Vietnam", flag: "🇻🇳" },
+        { code: "+855", country: "Cambodia", flag: "🇰🇭" },
+        { code: "+856", country: "Laos", flag: "🇱🇦" },
+        { code: "+852", country: "Hong Kong", flag: "🇭🇰" },
+        { code: "+886", country: "Taiwan", flag: "🇹🇼" },
+        { code: "+853", country: "Macau", flag: "🇲🇴" },
+
+        // ---- Middle East ----
+        { code: "+972", country: "Israel", flag: "🇮🇱" },
+        { code: "+962", country: "Jordan", flag: "🇯🇴" },
+        { code: "+961", country: "Lebanon", flag: "🇱🇧" },
+        { code: "+964", country: "Iraq", flag: "🇮🇶" },
+        { code: "+963", country: "Syria", flag: "🇸🇾" },
+        { code: "+967", country: "Yemen", flag: "🇾🇪" },
+
+        // ---- Europe ----
+        { code: "+351", country: "Portugal", flag: "🇵🇹" },
+        { code: "+358", country: "Finland", flag: "🇫🇮" },
+        { code: "+354", country: "Iceland", flag: "🇮🇸" },
+        { code: "+352", country: "Luxembourg", flag: "🇱🇺" },
+        { code: "+385", country: "Croatia", flag: "🇭🇷" },
+        { code: "+386", country: "Slovenia", flag: "🇸🇮" },
+        { code: "+381", country: "Serbia", flag: "🇷🇸" },
+        { code: "+387", country: "Bosnia & Herzegovina", flag: "🇧🇦" },
+        { code: "+389", country: "North Macedonia", flag: "🇲🇰" },
+        { code: "+359", country: "Bulgaria", flag: "🇧🇬" },
+
+        // ---- Central Asia ----
+        { code: "+7", country: "Kazakhstan", flag: "🇰🇿" },
+        { code: "+998", country: "Uzbekistan", flag: "🇺🇿" },
+        { code: "+993", country: "Turkmenistan", flag: "🇹🇲" },
+        { code: "+996", country: "Kyrgyzstan", flag: "🇰🇬" },
+        { code: "+992", country: "Tajikistan", flag: "🇹🇯" }
+
     ];
-    
+
 
     const cleanValue = (value) => {
         if (!value || value === 'N/A') return '';
@@ -498,24 +540,6 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         // For initialization, allow empty message; for user input, require non-empty
         if (!isInitialization && (!messageToSend || isTyping)) return;
 
-        // Validation: Check if previous response needed confirmation but coordinates are missing
-        // Skip validation if this is an address update from the map dialog
-        // if (!isInitialization && !isAddressUpdate && needsConfirmation && currentAppointmentDetails) {
-        //     if (isAddressMissing(currentAppointmentDetails)) {
-        //         // Show validation error message
-        //         setMessages((prev) => [...prev, {
-        //             role: "bot",
-        //             text: t('chatbot.coordinatesNotFound'),
-        //             isHtml: false,
-        //             htmlContent: null
-        //         }]);
-        //         setIsTyping(false);
-        //         setTimeout(() => {
-        //             inputRef.current?.focus();
-        //         }, 100);
-        //         return; // Don't send the message to API
-        //     }
-        // }
 
         // Only add user message if it's not an initialization call
         if (!isInitialization) {
@@ -703,20 +727,8 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         }
     };
 
-    // // Initialize session when chatbotId is found from URL
-    // useEffect(() => {
-    //     // Only initialize if we have a chatbotId, no sessionId yet, and haven't initialized before
-    //     if (chatbotId && !sessionId && !sessionInitializedRef.current && !isTyping) {
-    //         sessionInitializedRef.current = true; // Mark as initializing to prevent duplicate calls
-    //         console.log("Initializing session with chatbot ID:", chatbotId);
-    //         // Use sendMessage function for initialization with empty message
-    //         sendMessage("", true);
-    //     }
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [chatbotId]); // Only run when chatbotId changes
 
-    // Fetch customer lead data from API using token
-    const fetchCustomerLeadData = async (token) => {
+    const fetchCustomerLeadData = async (token, issuesToUse = null) => {
         setIsLoadingCustomerLead(true);
         try {
             const apiUrl = `${API_BASE_URL}/api/v1/admin/customer-leads/verify/link?token=${encodeURIComponent(token)}`;
@@ -741,17 +753,17 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             }
 
             if (data.success && data.data) {
-                
+
                 console.log("Customer lead data received:", data.data);
                 // Use the id from response as searchId
                 const searchId = data.data.id;
                 console.log("Using searchId from response:", searchId);
-                
+
                 // Ensure chatbotId is set from the verified customer lead
                 if (searchId) {
                     setChatbotId(searchId);
                 }
-                
+
                 setCustomerLeadData(data.data);
 
                 // Pre-fill appointment dialog with customer data
@@ -787,13 +799,13 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                 // Pre-fill editable customer fields
                 const customerName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim();
                 setEditableCustomerName(customerName);
-                
+
                 // Parse phone number: detect country code and keep full local number
                 const { countryCode, localNumber } = detectCountryCode(customer.phone || '');
-                
+
                 // Remove all non-digits from remaining phone number (keep leading zeros)
                 let phone = localNumber.replace(/\D/g, '');
-                
+
                 // Limit length (keep leading zeros if present to avoid cutting)
                 if (countryCode === "+58") {
                     if (phone.length > 11) {
@@ -804,16 +816,35 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                         phone = phone.substring(0, 15);
                     }
                 }
-                
+
                 setSelectedCountryCode(countryCode);
                 setEditableCustomerPhone(phone);
-                
+
                 setEditableCustomerEmail(customer.email || '');
-                
-                // Only set customer requirement if it matches a dropdown option
+
+                // Set customer requirement - if it matches dropdown, select it; otherwise select "Other" and fill manual input
                 const installationNote = contract?.installation_notes || '';
-                const matchesDropdown = customerIssues.some(issue => issue.customer_issue === installationNote);
-                setEditableCustomerRequirement(matchesDropdown ? installationNote : '');
+                // Use passed issues or fall back to state (for backward compatibility)
+                const issuesForMatching = issuesToUse || customerIssues;
+                console.log("Customer issues for matching:", issuesForMatching);
+                console.log("Installation note:", installationNote);
+                const matchesDropdown = Array.isArray(issuesForMatching) && issuesForMatching.length > 0
+                    ? issuesForMatching.some(issue => issue.customer_issue.toLowerCase() === installationNote.toLowerCase())
+                    : false;
+                console.log("Matches dropdown:", matchesDropdown);
+                if (matchesDropdown) {
+                    setEditableCustomerRequirement(installationNote);
+                    setOtherCustomerRequirement('');
+                    previousOtherRequirementRef.current = ''; // Clear previous value
+                } else if (installationNote) {
+                    setEditableCustomerRequirement('__OTHER__');
+                    setOtherCustomerRequirement(installationNote);
+                    previousOtherRequirementRef.current = installationNote; // Save to ref for later restoration
+                } else {
+                    setEditableCustomerRequirement('');
+                    setOtherCustomerRequirement('');
+                    previousOtherRequirementRef.current = ''; // Clear previous value
+                }
 
                 // Set minimum date to tomorrow
                 const tomorrow = new Date();
@@ -839,6 +870,25 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
 
     // Fetch customer issues from API
     const fetchCustomerIssues = async () => {
+        // Prevent duplicate calls if already fetched or currently fetching
+        if (customerIssuesFetchedRef.current) {
+            console.log("Customer issues already fetched, returning existing data from state...");
+            // Return existing customer issues from state if already fetched
+            // Use a small delay to ensure state is accessible
+            await new Promise(resolve => setTimeout(resolve, 50));
+            return customerIssues;
+        }
+
+        // Prevent duplicate calls if currently fetching
+        if (isLoadingCustomerIssues) {
+            console.log("Customer issues currently fetching, waiting...");
+            // Wait for current fetch to complete
+            while (isLoadingCustomerIssues) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            return customerIssues;
+        }
+
         setIsLoadingCustomerIssues(true);
         try {
             const apiUrl = `${API_BASE_URL}/api/v1/customer-issues/active`;
@@ -854,34 +904,52 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             if (res.ok && data.success && Array.isArray(data.data)) {
                 console.log("Customer issues received:", data.data);
                 setCustomerIssues(data.data);
+                customerIssuesFetchedRef.current = true; // Mark as fetched
+                return data.data; // Return the fetched data
             } else {
                 console.error("Error fetching customer issues:", data);
                 // Don't show error dialog, just log it - dropdown will be empty
+                return [];
             }
         } catch (err) {
             console.error("Error fetching customer issues:", err);
             // Don't show error dialog, just log it - dropdown will be empty
+            return [];
         } finally {
             setIsLoadingCustomerIssues(false);
         }
     };
 
     // Fetch customer issues on mount
-    useEffect(() => {
-        fetchCustomerIssues();
-    }, []);
+    // useEffect(() => {
+
+
+
+    //     fetchCustomerIssues();
+
+    // }, []);
 
     // Check for token in URL and open appointment dialog
+    // Fetch customer issues on mount and wait for completion before checking token
+    // Fetch customer issues on mount and wait for completion before checking token
+    // Fetch customer issues on mount and wait for completion before checking token
     useEffect(() => {
-        const checkAndOpenDialog = () => {
+        const initializeDialog = async () => {
+            // First, fetch customer issues (only once due to ref check)
+            const fetchedIssues = await fetchCustomerIssues();
+
+            // Wait for state to be updated - use a small delay to ensure React state is updated
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Then check for token and open dialog if needed
             const token = getTokenFromUrl();
             if (token) {
                 console.log("Token found in URL:", token);
-                // Fetch customer lead data and pre-fill dialog
-                fetchCustomerLeadData(token);
+                // Fetch customer lead data and pre-fill dialog, passing customer issues
+                await fetchCustomerLeadData(token, fetchedIssues);
             } else {
                 // Don't open dialog if no token is found
-                console.log("No token found in URL, opening appointment dialog");
+                console.log("No token found in URL");
                 // Avoid reopening if already open
                 if (!showAppointmentDialog) {
                     // Ensure minimum date is set
@@ -892,12 +960,17 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             }
         };
 
-        // Check on mount
-        checkAndOpenDialog();
+        initializeDialog();
 
         // Also listen for URL changes
-        const handleLocationChange = () => {
-            setTimeout(checkAndOpenDialog, 100); // Small delay to ensure URL is updated
+        const handleLocationChange = async () => {
+            // Always fetch customer issues (ref check prevents duplicate calls)
+            const issuesToUse = await fetchCustomerIssues();
+
+            const token = getTokenFromUrl();
+            if (token) {
+                await fetchCustomerLeadData(token, issuesToUse);
+            }
         };
 
         window.addEventListener('popstate', handleLocationChange);
@@ -916,7 +989,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                 const target = event.target;
                 const datePickerElement = document.querySelector('.date-picker-container');
                 const dateInputElement = document.querySelector('.date-input-wrapper');
-                if (datePickerElement && !datePickerElement.contains(target) && 
+                if (datePickerElement && !datePickerElement.contains(target) &&
                     dateInputElement && !dateInputElement.contains(target)) {
                     setShowDatePicker(false);
                 }
@@ -957,14 +1030,36 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         </div>
     );
 
-    const InfoTooltip = ({ text }) => (
-        <span className="relative inline-flex items-center group align-middle">
-            <Info size={14} className="text-gray-400 cursor-pointer" />
-            <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 rounded-md bg-gray-900 text-white text-xs px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-50 text-left">
-                {text}
-            </span>
-        </span>
-    );
+   const InfoTooltip = ({ text }) => (
+  <span className="relative inline-flex items-center group align-middle">
+    <Info size={14} className="text-gray-400 cursor-pointer" />
+
+    <span className="
+      pointer-events-none
+      absolute
+      left-full
+      ml-2
+      top-1/2
+      -translate-y-1/2
+      w-64
+      rounded-md
+      bg-gray-900
+      text-white
+      text-xs
+      px-3
+      py-2
+      opacity-0
+      group-hover:opacity-100
+      transition-opacity
+      shadow-lg
+      z-50
+      text-center
+    ">
+      {text}
+    </span>
+  </span>
+);
+
 
     const startNewConversation = () => {
         setMessages([{ role: "bot", text: t('chatbot.greeting'), isHtml: false, htmlContent: null }]);
@@ -977,25 +1072,26 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         setShowMapDialog(false);
         setSelectedLocation({ lat: null, lng: null, address: '' });
         sessionInitializedRef.current = false; // Reset so session can be re-initialized if chatbotId exists
-        
+
         // Reset editable fields for fresh appointment
         setEditableCustomerName("");
         setEditableCustomerPhone("");
         setSelectedCountryCode("+58"); // Reset to default Venezuela
         setEditableCustomerEmail("");
         setEditableCustomerRequirement("");
+        setOtherCustomerRequirement("");
         setEditableHouseNumber("");
         setEditableSector("");
         setEditableCity("");
         setEditableState("");
         setIsEditMode(false);
-        
+
         // Set minimum date to tomorrow
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const minDate = tomorrow.toISOString().split('T')[0];
         setSelectedDate(minDate);
-        
+
         // Open appointment dialog
         setShowAppointmentDialog(true);
     };
@@ -1625,7 +1721,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         const month = (selected.getMonth() + 1).toString().padStart(2, '0');
         const dayStr = selected.getDate().toString().padStart(2, '0');
         const dateString = `${year}-${month}-${dayStr}`;
-        
+
         // Only allow future dates (tomorrow onwards)
         if (isFutureDate(dateString)) {
             setSelectedDate(dateString);
@@ -1689,10 +1785,10 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             setTimeError("");
             return;
         }
-        
+
         const time24 = convert12To24Hour(hour, minute, ampm);
         setSelectedTime(time24);
-        
+
         // Validate time range (9 AM to 6 PM)
         if (!isTimeInAllowedRange(hour, minute, ampm)) {
             setTimeError(t('chatbot.timeRangeError') || 'Time must be between 9 AM and 6 PM');
@@ -1705,7 +1801,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     const handlePhoneNumberChange = (value) => {
         // Remove all non-digit characters (keep only digits)
         let digitsOnly = value.replace(/\D/g, '');
-        
+
         if (selectedCountryCode === "+58") {
             // For Venezuela, keep leading 0 if user types it; allow up to 11 digits
             if (digitsOnly.length > 11) {
@@ -1717,7 +1813,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                 digitsOnly = digitsOnly.substring(0, 15);
             }
         }
-        
+
         setEditableCustomerPhone(digitsOnly);
     };
 
@@ -1730,14 +1826,14 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     // Validate phone number based on country code
     const isValidPhoneNumber = (phone, countryCode) => {
         if (!phone || !phone.trim()) return false;
-        
+
         const digitsOnly = phone.replace(/\D/g, '');
-        
+
         // Venezuela: allow 10 or 11 digits (to avoid cutting leading 0 when present)
         if (countryCode === "+58") {
             return digitsOnly.length >= 10 && digitsOnly.length <= 11;
         }
-        
+
         // Other countries: 7-15 digits (international standard)
         return digitsOnly.length >= 7 && digitsOnly.length <= 15;
     };
@@ -1750,7 +1846,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     };
 
     // Validate all fields in edit mode - all fields are mandatory
-    const validateEditModeFields = () => {
+    const validateEditModeFields = (overrideAddress = null) => {
         const errors = {
             name: "",
             phone: "",
@@ -1766,7 +1862,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             if (!editableCustomerName.trim()) {
                 errors.name = t('chatbot.fieldRequired') || 'This field is required';
             }
-            
+
             if (!editableCustomerPhone.trim()) {
                 errors.phone = t('chatbot.fieldRequired') || 'This field is required';
             } else if (!isValidPhoneNumber(editableCustomerPhone, selectedCountryCode)) {
@@ -1776,31 +1872,39 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                     errors.phone = t('chatbot.phoneValidationErrorInternational') || 'Phone number must be between 7 and 15 digits';
                 }
             }
-            
+
             if (!editableCustomerEmail.trim()) {
                 errors.email = t('chatbot.fieldRequired') || 'This field is required';
             } else if (!isValidEmail(editableCustomerEmail)) {
                 errors.email = t('chatbot.emailValidationError') || 'Please enter a valid email address';
             }
-            
+
             if (!editableCustomerRequirement.trim()) {
                 errors.requirement = t('chatbot.fieldRequired') || 'This field is required';
+            } else if (editableCustomerRequirement === '__OTHER__' && !otherCustomerRequirement.trim()) {
+                errors.requirement = t('chatbot.fieldRequired') || 'This field is required';
             }
-            
+
             if (!selectedDate) {
                 errors.date = t('chatbot.fieldRequired') || 'This field is required';
             } else if (!isFutureDate(selectedDate)) {
                 errors.date = t('chatbot.pleaseSelectFutureDate');
             }
-            
+
             if (!selectedTime && (!selectedHour || !selectedMinute)) {
                 errors.time = t('chatbot.fieldRequired') || 'This field is required';
             } else if (selectedHour && selectedMinute && !isTimeInAllowedRange(selectedHour, selectedMinute, selectedAmPm)) {
                 errors.time = t('chatbot.timeRangeError') || 'Time must be between 9 AM and 6 PM';
             }
-            
-            if (!appointmentLocation.lat || !appointmentLocation.lng) {
+
+            // Address is valid if coordinates are set (editableFullAddress will be populated from coordinates)
+            // Use overrideAddress if provided (for immediate validation after setting address)
+            const addressToCheck = overrideAddress || appointmentLocation;
+            if (!addressToCheck.lat || !addressToCheck.lng) {
                 errors.address = t('chatbot.fieldRequired') || 'This field is required';
+            } else {
+                // Clear address error if coordinates are set
+                errors.address = "";
             }
         }
 
@@ -1812,7 +1916,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
     const checkAddressViability = async (lat, lng) => {
         setIsCheckingViability(true);
         setViabilityError("");
-        
+
         try {
             const apiUrl = `${API_BASE_URL}/api/v1/admin/customer-leads/check-viability?lat=${lat}&lng=${lng}`;
             const response = await fetch(apiUrl, {
@@ -1821,12 +1925,12 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             const responseData = await response.json();
-            
+
             // Handle nested response: { success: true, data: { success, isInstallable, detail, distance } }
             const viabilityData = responseData.data || responseData;
-            
+
             if (responseData.success && viabilityData.isInstallable) {
                 setViabilityError("");
                 return true;
@@ -1846,6 +1950,11 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
 
     // Reverse geocode for appointment dialog
     const reverseGeocodeAppointment = async (lat, lng) => {
+        // Clear address error immediately when clicking on map in edit mode
+        if (isEditMode) {
+            setFieldErrors(prev => ({ ...prev, address: '' }));
+        }
+
         try {
             // First: Reverse geocode to get address
             const response = await fetch(
@@ -1857,11 +1966,11 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             if (data.features && data.features.length > 0) {
                 const feature = data.features[0];
                 address = feature.properties?.full_address || feature.properties?.place_name || feature.place_name || `${lat}, ${lng}`;
-                
+
                 // Update address fields temporarily
                 setAppointmentSearchAddress(address);
                 setEditableFullAddress(address);
-                
+
                 const { city, state } = extractCityState(feature);
                 if (city) setEditableCity(city);
                 if (state) setEditableState(state);
@@ -1869,41 +1978,65 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                 setAppointmentSearchAddress(address);
                 setEditableFullAddress(address);
             }
-            
+
             // Second: Check viability API
             const isViable = await checkAddressViability(lat, lng);
-            
+
             if (!isViable) {
                 // Clear location coordinates if not viable (marker stays to show clicked location)
                 setAppointmentLocation({ lat: null, lng: null, address: '' });
                 setEditableFullAddress('');
+                // Clear address error if in edit mode
+                if (isEditMode) {
+                    setFieldErrors(prev => ({ ...prev, address: '' }));
+                }
                 return;
             }
-            
-            // If viable, update appointment location with coordinates
-            setAppointmentLocation({ lat, lng, address });
-            
+
+            // If viable, update appointment location with coordinates and full address
+            const newLocation = { lat, lng, address };
+            setAppointmentLocation(newLocation);
+            setEditableFullAddress(address); // Ensure editableFullAddress is set when viable
+
+            // Clear address error immediately if in edit mode
             if (isEditMode) {
-                setTimeout(() => validateEditModeFields(), 0);
+                // Clear error immediately
+                setFieldErrors(prev => {
+                    const newErrors = { ...prev };
+                    newErrors.address = ''; // Explicitly clear address error
+                    return newErrors;
+                });
+
+                // Validate immediately with the new address coordinates (bypasses state update delay)
+                validateEditModeFields(newLocation);
             }
         } catch (error) {
             console.error('Reverse geocoding error:', error);
             setAppointmentSearchAddress(`${lat}, ${lng}`);
             setEditableFullAddress(`${lat}, ${lng}`);
-            
+
             // Still check viability even if geocoding failed
             const isViable = await checkAddressViability(lat, lng);
-            
+
             if (!isViable) {
                 setAppointmentLocation({ lat: null, lng: null, address: '' });
                 setEditableFullAddress('');
+                // Clear address error if in edit mode
+                if (isEditMode) {
+                    setFieldErrors(prev => ({ ...prev, address: '' }));
+                }
                 return;
             }
-            
-            setAppointmentLocation({ lat, lng, address: `${lat}, ${lng}` });
-            
+
+            const newLocation = { lat, lng, address: `${lat}, ${lng}` };
+            setAppointmentLocation(newLocation);
+            setEditableFullAddress(`${lat}, ${lng}`); // Ensure editableFullAddress is set
+
+            // Clear address error if in edit mode
             if (isEditMode) {
-                setTimeout(() => validateEditModeFields(), 0);
+                setFieldErrors(prev => ({ ...prev, address: '' }));
+                // Validate immediately with the new address coordinates (bypasses state update delay)
+                validateEditModeFields(newLocation);
             }
         }
     };
@@ -1949,9 +2082,30 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                         });
                     }
 
-                    setAppointmentLocation({ lat, lng, address });
+                    // Check viability before setting location
+                    const isViable = await checkAddressViability(lat, lng);
+
+                    if (!isViable) {
+                        // Clear location coordinates if not viable
+                        setAppointmentLocation({ lat: null, lng: null, address: '' });
+                        setEditableFullAddress('');
+                        // Clear address error if in edit mode
+                        if (isEditMode) {
+                            setFieldErrors(prev => ({ ...prev, address: '' }));
+                        }
+                        return;
+                    }
+
+                    // If viable, set location and full address
+                    const newLocation = { lat, lng, address };
+                    setAppointmentLocation(newLocation);
+                    setEditableFullAddress(address);
+
+                    // Clear address error if in edit mode
                     if (isEditMode) {
-                        setTimeout(() => validateEditModeFields(), 0);
+                        setFieldErrors(prev => ({ ...prev, address: '' }));
+                        // Validate immediately with the new address coordinates (bypasses state update delay)
+                        validateEditModeFields(newLocation);
                     }
                 }
             } else {
@@ -1975,54 +2129,54 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             if (coordinates) {
                 const [lng, lat] = coordinates;
                 const address = feature.properties?.full_address || feature.properties?.place_name || feature.place_name || '';
-                
+                reverseGeocodeAppointment(lat, lng);
                 // First: Update map, fly to location and set marker
-                if (appointmentMapRef.current) {
-                    appointmentMapRef.current.flyTo({
-                        center: [lng, lat],
-                        zoom: 15,
-                        duration: 1000
-                    });
+                // if (appointmentMapRef.current) {
+                //     appointmentMapRef.current.flyTo({
+                //         center: [lng, lat],
+                //         zoom: 15,
+                //         duration: 1000
+                //     });
 
-                    if (appointmentMarkerRef.current) {
-                        appointmentMarkerRef.current.setLngLat([lng, lat]);
-                    } else {
-                        appointmentMarkerRef.current = new mapboxgl.Marker({ draggable: true })
-                            .setLngLat([lng, lat])
-                            .addTo(appointmentMapRef.current);
+                //     if (appointmentMarkerRef.current) {
+                //         appointmentMarkerRef.current.setLngLat([lng, lat]);
+                //     } else {
+                //         appointmentMarkerRef.current = new mapboxgl.Marker({ draggable: true })
+                //             .setLngLat([lng, lat])
+                //             .addTo(appointmentMapRef.current);
 
-                        appointmentMarkerRef.current.on('dragend', () => {
-                            const lngLat = appointmentMarkerRef.current.getLngLat();
-                            reverseGeocodeAppointment(lngLat.lat, lngLat.lng);
-                        });
-                    }
-                }
-                
-                // Second: Update address fields temporarily
-                setAppointmentSearchAddress(address);
-                setEditableFullAddress(address);
-                
-                // Extract city and state
-                const { city, state } = extractCityState(feature);
-                if (city) setEditableCity(city);
-                if (state) setEditableState(state);
-                
-                // Third: Check viability API
-                const isViable = await checkAddressViability(lat, lng);
-                
-                if (!isViable) {
-                    // Clear location coordinates if not viable (keep marker visible to show searched location)
-                    setAppointmentLocation({ lat: null, lng: null, address: '' });
-                    setEditableFullAddress('');
-                    return;
-                }
-                
-                // If viable, update appointment location with coordinates
-                setAppointmentLocation({ lat, lng, address });
+                //         appointmentMarkerRef.current.on('dragend', () => {
+                //             const lngLat = appointmentMarkerRef.current.getLngLat();
+                //             reverseGeocodeAppointment(lngLat.lat, lngLat.lng);
+                //         });
+                //     }
+                // }
 
-                if (isEditMode) {
-                    setTimeout(() => validateEditModeFields(), 0);
-                }
+                // // Second: Update address fields temporarily
+                // setAppointmentSearchAddress(address);
+                // setEditableFullAddress(address);
+
+                // // Extract city and state
+                // const { city, state } = extractCityState(feature);
+                // if (city) setEditableCity(city);
+                // if (state) setEditableState(state);
+
+                // // Third: Check viability API
+                // const isViable = await checkAddressViability(lat, lng);
+
+                // if (!isViable) {
+                //     // Clear location coordinates if not viable (keep marker visible to show searched location)
+                //     setAppointmentLocation({ lat: null, lng: null, address: '' });
+                //     setEditableFullAddress('');
+                //     return;
+                // }
+
+                // // If viable, update appointment location with coordinates
+                // setAppointmentLocation({ lat, lng, address });
+
+                // if (isEditMode) {
+                //     setTimeout(() => validateEditModeFields(), 0);
+                // }
             }
         }
     };
@@ -2045,6 +2199,12 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         if (!editableCustomerRequirement.trim()) {
             setFieldErrors(prev => ({ ...prev, requirement: t('chatbot.fieldRequired') || 'This field is required' }));
             alert(t('chatbot.fieldRequired') || 'Please select a customer requirement');
+            return;
+        }
+        // Validate manual input when "Other" is selected
+        if (editableCustomerRequirement === '__OTHER__' && !otherCustomerRequirement.trim()) {
+            setFieldErrors(prev => ({ ...prev, requirement: t('chatbot.fieldRequired') || 'This field is required' }));
+            alert(t('chatbot.fieldRequired') || 'Please enter a customer requirement');
             return;
         }
 
@@ -2161,54 +2321,57 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             customerEmail = currentAppointmentDetails.customer.email;
         }
 
-        if (editableCustomerRequirement.trim()) {
+        // Use manual input if "Other" is selected, otherwise use dropdown value
+        if (editableCustomerRequirement === '__OTHER__') {
+            installationNotes = otherCustomerRequirement.trim();
+        } else if (editableCustomerRequirement.trim()) {
             installationNotes = editableCustomerRequirement.trim();
         } else if (customerLeadData) {
             installationNotes = customerLeadData.contract?.installation_notes || '';
         }
 
         // Build structured appointment message with labels and values
-       
+
         const messageParts = [];
-        
+
         // Only add fields if they have values
         if (customerName && customerName.trim()) {
             messageParts.push(`${t('chatbot.customerName') || 'Customer Name'}: ${customerName.trim()}`);
         }
-        
+
         if (customerPhone && customerPhone.trim()) {
             messageParts.push(`${t('appointments.contactNumber') || 'Contact Number'}: ${customerPhone.trim()}`);
         }
-        
+
         if (customerEmail && customerEmail.trim()) {
             messageParts.push(`${t('chatbot.customerEmail') || 'Email'}: ${customerEmail.trim()}`);
         }
-        
+
         if (installationNotes && installationNotes.trim()) {
             messageParts.push(`${t('chatbot.customerRequirement') || 'Customer Requirements'}: ${installationNotes.trim()}`);
         }
-        
+
         // Format address with coordinates
         const fullAddress = editableFullAddress.trim() || appointmentLocation.address || '';
         const addressWithCoordinates = fullAddress;
-        const coordinates = appointmentLocation.lat && appointmentLocation.lng 
+        const coordinates = appointmentLocation.lat && appointmentLocation.lng
             ? ` (${t('chatbot.coordinates')} ${appointmentLocation.lat}, ${appointmentLocation.lng})`
             : '';
         messageParts.push(`${t('appointments.address') || 'Address'}: ${addressWithCoordinates}${coordinates}`);
         if (editableHouseNumber.trim()) {
-           
+
             messageParts.push(`House Number: ${editableHouseNumber.trim()}`);
         }
         if (editableSector.trim()) {
-           
+
             messageParts.push(`Sector: ${editableSector.trim()}`);
         }
         if (editableCity.trim()) {
-            
+
             messageParts.push(`City: ${editableCity.trim()}`);
         }
         if (editableState.trim()) {
-            
+
             messageParts.push(`State: ${editableState.trim()}`);
         }
         // Persist address detail fields for reuse when editing
@@ -2218,10 +2381,10 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             city: editableCity.trim(),
             state: editableState.trim()
         });
-        
+
         messageParts.push(`${t('appointments.date') || 'Date'}: ${formattedDate} (DD/MM/YYYY)`);
         messageParts.push(`${t('appointments.time') || 'Time'}: ${timeLabel}`);
-        
+
         const appointmentMessage = messageParts.join('\n');
 
         // Close dialog
@@ -2257,6 +2420,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
         setSelectedCountryCode("+58"); // Reset to default Venezuela
         setEditableCustomerEmail("");
         setEditableCustomerRequirement("");
+        setOtherCustomerRequirement("");
         setSavedAddressDetails({
             houseNumber: "",
             sector: "",
@@ -2330,7 +2494,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             });
 
         }
-       
+
 
         // Store customer data for pre-filling in the booking message
         if (customer) {
@@ -2350,16 +2514,16 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                     longitude: customer.longitude || null
                 }
             });
-            
+
             // Pre-fill editable fields
             setEditableCustomerName(customer.name || '');
-            
+
             // Parse phone number: detect country code and keep full local number
             const { countryCode, localNumber } = detectCountryCode(customer.contact_number || '');
-            
+
             // Remove all non-digits from remaining phone number (keep leading zeros)
             let phone = localNumber.replace(/\D/g, '');
-            
+
             // Limit length (keep leading zeros if present to avoid cutting)
             if (countryCode === "+58") {
                 if (phone.length > 11) {
@@ -2370,38 +2534,50 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                     phone = phone.substring(0, 15);
                 }
             }
-            
+
             setSelectedCountryCode(countryCode);
             setEditableCustomerPhone(phone);
-            
+
             setEditableCustomerEmail(customer.email || '');
-            
-            // Only set customer requirement if it matches a dropdown option
-            const customerRequirement = service?.customer_requirement || '';
-            const matchesDropdown = customerIssues.some(issue => issue.customer_issue === customerRequirement);
-            setEditableCustomerRequirement(matchesDropdown ? customerRequirement : '');
+
+            // Set customer requirement - if it matches dropdown, select it; otherwise select "Other" and fill manual input
+            const customerRequirementValue = service?.customer_requirement || '';
+            const matchesDropdown = customerIssues.some(issue => issue.customer_issue.toLowerCase() === customerRequirementValue.toLowerCase());
+            if (matchesDropdown) {
+                setEditableCustomerRequirement(customerRequirementValue);
+                setOtherCustomerRequirement('');
+                previousOtherRequirementRef.current = ''; // Clear previous value
+            } else if (customerRequirementValue) {
+                setEditableCustomerRequirement('__OTHER__');
+                setOtherCustomerRequirement(customerRequirementValue);
+                previousOtherRequirementRef.current = customerRequirementValue; // Save to ref for later restoration
+            } else {
+                setEditableCustomerRequirement('');
+                setOtherCustomerRequirement('');
+                previousOtherRequirementRef.current = ''; // Clear previous value
+            }
 
             // Reset address detail inputs when opening edit (use saved first, then customer)
             const house = cleanValue(savedAddressDetails.houseNumber) || cleanValue(customer.house_number);
             const sector = cleanValue(savedAddressDetails.sector) || cleanValue(customer.sector);
-        const city = cleanValue(savedAddressDetails.city) || cleanValue(customer.city);
-        const state = cleanValue(savedAddressDetails.state) || cleanValue(customer.state);
+            const city = cleanValue(savedAddressDetails.city) || cleanValue(customer.city);
+            const state = cleanValue(savedAddressDetails.state) || cleanValue(customer.state);
             setEditableHouseNumber(house);
             setEditableSector(sector);
             setEditableCity(city);
             setEditableState(state);
-        // Persist for next edit if they weren't saved yet
-        setSavedAddressDetails({
-            houseNumber: house,
-            sector,
-            city,
-            state
-        });
+            // Persist for next edit if they weren't saved yet
+            setSavedAddressDetails({
+                houseNumber: house,
+                sector,
+                city,
+                state
+            });
         }
 
         // Set edit mode flag
         setIsEditMode(true);
-        
+
         // Reset field errors
         setFieldErrors({
             name: "",
@@ -2412,7 +2588,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
             time: "",
             address: ""
         });
-        
+
         // Open dialog
         setShowAppointmentDialog(true);
     };
@@ -2480,10 +2656,10 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
 
         // Set currentAppointmentDetails from confirmationAppointmentDetails
         setCurrentAppointmentDetails(confirmationAppointmentDetails);
-        
+
         // Close confirmation dialog
         setShowConfirmationDialog(false);
-        
+
         // Open edit appointment dialog
         openEditAppointmentDialog();
     };
@@ -2660,15 +2836,28 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                     <div className="p-4 border-t border-gray-100 bg-white rounded-b-3xl">
                         {!confirmation ? (
                             <div className="flex items-center space-x-3 bg-gray-50 rounded-2xl p-2">
-                                <input
+                                <textarea
                                     ref={inputRef}
-                                    type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && !isTyping && sendMessage()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey && !isTyping) {
+                                            e.preventDefault();
+                                            sendMessage();
+                                        }
+                                    }}
                                     placeholder={t('chatbot.placeholder')}
                                     disabled={isTyping}
-                                    className="flex-1 bg-transparent outline-none text-sm text-gray-700 px-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    rows={1}
+                                    className="flex-1 bg-transparent outline-none text-sm text-gray-700 px-2 disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-hidden"
+                                    style={{
+                                        minHeight: '24px',
+                                        maxHeight: '96px' // 4 lines * 24px
+                                    }}
+                                    onInput={(e) => {
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = Math.min(e.target.scrollHeight, 96) + 'px';
+                                    }}
                                 />
                                 <button
                                     onClick={() => sendMessage()}
@@ -2804,7 +2993,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                 <Calendar className="h-5 w-5" />
                                 {t('chatbot.bookAppointment')}
                             </h3>
-                           
+
                         </div>
 
                         {/* Content */}
@@ -2813,134 +3002,134 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                             {(() => {
                                 // If in edit mode, show them
                                 if (isEditMode) return true;
-                                
-                                const hasName = editableCustomerName.trim() || 
-                                               (customerLeadData?.customer?.first_name && customerLeadData?.customer?.last_name) ||
-                                               (currentAppointmentDetails?.customer?.name);
-                                const hasPhone = editableCustomerPhone.trim() || 
-                                                 customerLeadData?.customer?.phone ||
-                                                 currentAppointmentDetails?.customer?.contact_number;
-                                const hasEmail = editableCustomerEmail.trim() || 
-                                                 customerLeadData?.customer?.email ||
-                                                 currentAppointmentDetails?.customer?.email;
-                                
+
+                                const hasName = editableCustomerName.trim() ||
+                                    (customerLeadData?.customer?.first_name && customerLeadData?.customer?.last_name) ||
+                                    (currentAppointmentDetails?.customer?.name);
+                                const hasPhone = editableCustomerPhone.trim() ||
+                                    customerLeadData?.customer?.phone ||
+                                    currentAppointmentDetails?.customer?.contact_number;
+                                const hasEmail = editableCustomerEmail.trim() ||
+                                    customerLeadData?.customer?.email ||
+                                    currentAppointmentDetails?.customer?.email;
+
                                 return hasName || hasPhone || hasEmail;
                             })() && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-shrink-0 border-b pb-4">
-                                    {/* Customer Name */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                            {t('chatbot.customerName')} {isEditMode && <span className="text-red-500">*</span>}
-                                            <InfoTooltip text={t('chatbot.enterFullName') || "Enter the customer's full name as it should appear on the appointment."} />
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={editableCustomerName}
-                                            onChange={(e) => {
-                                                setEditableCustomerName(e.target.value);
-                                                if (isEditMode) {
-                                                    setTimeout(() => validateEditModeFields(), 0);
-                                                }
-                                            }}
-                                            placeholder={t('chatbot.customerName')}
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.name ? 'border-red-500' : 'border-gray-300'}`}
-                                        />
-                                        {fieldErrors.name && (
-                                            <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Customer Phone */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                            {t('chatbot.customerPhone')} {isEditMode && <span className="text-red-500">*</span>}
-                                            <InfoTooltip text={t('chatbot.enterPhoneWithCountryCode') || 'Select country code and enter phone number.'} />
-                                        </label>
-                                        <div className="flex gap-2">
-                                            {/* Country Code Dropdown */}
-                                            <div className="flex-shrink-0">
-                                                <CustomDropdown
-                                                    value={selectedCountryCode}
-                                                    onChange={(value) => {
-                                                        setSelectedCountryCode(value);
-                                                        if (isEditMode) {
-                                                            setTimeout(() => validateEditModeFields(), 0);
-                                                        }
-                                                    }}
-                                                    options={countryCodes.map((country) => ({
-                                                        value: country.code,
-                                                        label: `${country.flag} ${country.code}`,
-                                                        searchText: `${country.code} ${country.country} ${country.flag}`
-                                                    }))}
-                                                    minWidth="100px"
-                                                    searchable={true}
-                                                    searchPlaceholder="Search country or code..."
-                                                />
-                                            </div>
-                                            {/* Phone Number Input */}
-                                            <div className="flex-1 min-w-0">
-                                                <input
-                                                    type="tel"
-                                                    value={editableCustomerPhone}
-                                                    onChange={(e) => {
-                                                        handlePhoneNumberChange(e.target.value);
-                                                        if (isEditMode) {
-                                                            setTimeout(() => validateEditModeFields(), 0);
-                                                        }
-                                                    }}
-                                                    placeholder={selectedCountryCode === "+58" ? t('chatbot.phonePlaceholder') || "04121234567" : t('chatbot.phonePlaceholderInternational') || "Phone number"}
-                                                    maxLength={selectedCountryCode === "+58" ? 11 : 15}
-                                                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
-                                                />
-                                            </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-shrink-0 border-b pb-4">
+                                        {/* Customer Name */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                                {t('chatbot.customerName')} {isEditMode && <span className="text-red-500">*</span>}
+                                                <InfoTooltip text={t('chatbot.enterFullName') || "Enter the customer's full name as it should appear on the appointment."} />
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editableCustomerName}
+                                                onChange={(e) => {
+                                                    setEditableCustomerName(e.target.value);
+                                                    if (isEditMode) {
+                                                        setTimeout(() => validateEditModeFields(), 0);
+                                                    }
+                                                }}
+                                                placeholder={t('chatbot.customerName')}
+                                                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.name ? 'border-red-500' : 'border-gray-300'}`}
+                                            />
+                                            {fieldErrors.name && (
+                                                <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>
+                                            )}
                                         </div>
-                                        {fieldErrors.phone && (
-                                            <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>
-                                        )}
-                                        {!fieldErrors.phone && editableCustomerPhone && !isValidPhoneNumber(editableCustomerPhone, selectedCountryCode) && (
-                                            <p className="text-red-500 text-xs mt-1">
-                                                {selectedCountryCode === "+58" 
-                                                    ? (t('chatbot.phoneValidationError') || 'Phone number must be exactly 10 digits')
-                                                    : (t('chatbot.phoneValidationErrorInternational') || 'Phone number must be between 7 and 15 digits')
-                                                }
-                                            </p>
-                                        )}
-                                        {!fieldErrors.phone && editableCustomerPhone && isValidPhoneNumber(editableCustomerPhone, selectedCountryCode) && (
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                {t('chatbot.fullPhoneNumber') || 'Full number'}: {getFullPhoneNumber()}
-                                            </p>
-                                        )}
-                                    </div>
 
-                                    {/* Customer Email */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                            {t('chatbot.customerEmail')} {isEditMode && <span className="text-red-500">*</span>}
-                                            <InfoTooltip text={t('chatbot.enterValidEmail') || 'Add a valid email for confirmations (optional if not required).'} />
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={editableCustomerEmail}
-                                            onChange={(e) => {
-                                                setEditableCustomerEmail(e.target.value);
-                                                if (isEditMode) {
-                                                    setTimeout(() => validateEditModeFields(), 0);
-                                                }
-                                            }}
-                                            placeholder={t('chatbot.customerEmail')}
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
-                                        />
-                                        {fieldErrors.email && (
-                                            <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
-                                        )}
-                                        {!fieldErrors.email && editableCustomerEmail && !isValidEmail(editableCustomerEmail) && (
-                                            <p className="text-red-500 text-xs mt-1">
-                                                {t('chatbot.emailValidationError') || 'Please enter a valid email address'}
-                                            </p>
-                                        )}
+                                        {/* Customer Phone */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                                {t('chatbot.customerPhone')} {isEditMode && <span className="text-red-500">*</span>}
+                                                <InfoTooltip text={t('chatbot.enterPhoneWithCountryCode') || 'Select country code and enter phone number.'} />
+                                            </label>
+                                            <div className="flex gap-2">
+                                                {/* Country Code Dropdown */}
+                                                <div className="flex-shrink-0">
+                                                    <CustomDropdown
+                                                        value={selectedCountryCode}
+                                                        onChange={(value) => {
+                                                            setSelectedCountryCode(value);
+                                                            if (isEditMode) {
+                                                                setTimeout(() => validateEditModeFields(), 0);
+                                                            }
+                                                        }}
+                                                        options={countryCodes.map((country) => ({
+                                                            value: country.code,
+                                                            label: `${country.flag} ${country.code}`,
+                                                            searchText: `${country.code} ${country.country} ${country.flag}`
+                                                        }))}
+                                                        minWidth="100px"
+                                                        searchable={true}
+                                                        searchPlaceholder="Search country or code..."
+                                                    />
+                                                </div>
+                                                {/* Phone Number Input */}
+                                                <div className="flex-1 min-w-0">
+                                                    <input
+                                                        type="tel"
+                                                        value={editableCustomerPhone}
+                                                        onChange={(e) => {
+                                                            handlePhoneNumberChange(e.target.value);
+                                                            if (isEditMode) {
+                                                                setTimeout(() => validateEditModeFields(), 0);
+                                                            }
+                                                        }}
+                                                        placeholder={selectedCountryCode === "+58" ? t('chatbot.phonePlaceholder') || "04121234567" : t('chatbot.phonePlaceholderInternational') || "Phone number"}
+                                                        maxLength={selectedCountryCode === "+58" ? 11 : 15}
+                                                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {fieldErrors.phone && (
+                                                <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>
+                                            )}
+                                            {!fieldErrors.phone && editableCustomerPhone && !isValidPhoneNumber(editableCustomerPhone, selectedCountryCode) && (
+                                                <p className="text-red-500 text-xs mt-1">
+                                                    {selectedCountryCode === "+58"
+                                                        ? (t('chatbot.phoneValidationError') || 'Phone number must be exactly 10 digits')
+                                                        : (t('chatbot.phoneValidationErrorInternational') || 'Phone number must be between 7 and 15 digits')
+                                                    }
+                                                </p>
+                                            )}
+                                            {!fieldErrors.phone && editableCustomerPhone && isValidPhoneNumber(editableCustomerPhone, selectedCountryCode) && (
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {t('chatbot.fullPhoneNumber') || 'Full number'}: {getFullPhoneNumber()}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Customer Email */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                                {t('chatbot.customerEmail')} {isEditMode && <span className="text-red-500">*</span>}
+                                                <InfoTooltip text={t('chatbot.enterValidEmail') || 'Add a valid email for confirmations (optional if not required).'} />
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={editableCustomerEmail}
+                                                onChange={(e) => {
+                                                    setEditableCustomerEmail(e.target.value);
+                                                    if (isEditMode) {
+                                                        setTimeout(() => validateEditModeFields(), 0);
+                                                    }
+                                                }}
+                                                placeholder={t('chatbot.customerEmail')}
+                                                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                                            />
+                                            {fieldErrors.email && (
+                                                <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                                            )}
+                                            {!fieldErrors.email && editableCustomerEmail && !isValidEmail(editableCustomerEmail) && (
+                                                <p className="text-red-500 text-xs mt-1">
+                                                    {t('chatbot.emailValidationError') || 'Please enter a valid email address'}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                             {/* Customer Requirement - shown in second row in edit mode */}
                             {isEditMode && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-shrink-0 border-b pb-4">
@@ -2952,7 +3141,25 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                         <CustomDropdown
                                             value={editableCustomerRequirement}
                                             onChange={(value) => {
+                                                // If switching away from "Other", save the current value to ref
+                                                if (editableCustomerRequirement === '__OTHER__' && value !== '__OTHER__') {
+                                                    if (otherCustomerRequirement.trim()) {
+                                                        previousOtherRequirementRef.current = otherCustomerRequirement;
+                                                    }
+                                                }
+
                                                 setEditableCustomerRequirement(value);
+
+                                                // Restore previous value when switching to "Other", or clear when selecting a different option
+                                                if (value === '__OTHER__') {
+                                                    // Restore previous value if it exists and current is empty
+                                                    if (previousOtherRequirementRef.current && !otherCustomerRequirement.trim()) {
+                                                        setOtherCustomerRequirement(previousOtherRequirementRef.current);
+                                                    }
+                                                } else {
+                                                    // Clear manual input when selecting non-"Other" option
+                                                    setOtherCustomerRequirement('');
+                                                }
                                                 setTimeout(() => validateEditModeFields(), 0);
                                             }}
                                             options={[
@@ -2960,7 +3167,8 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                 ...customerIssues.map((issue) => ({
                                                     value: issue.customer_issue,
                                                     label: issue.customer_issue
-                                                }))
+                                                })),
+                                                { value: "__OTHER__", label: t('chatbot.otherOption') || "Other" }
                                             ]}
                                             placeholder={isLoadingCustomerIssues ? t('chatbot.loading') : t('chatbot.selectRequirement')}
                                             disabled={isLoadingCustomerIssues}
@@ -2968,6 +3176,19 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             searchable={true}
                                             searchPlaceholder="Search requirements..."
                                         />
+                                        {/* Manual input for "Other" option */}
+                                        {editableCustomerRequirement === '__OTHER__' && (
+                                            <input
+                                                type="text"
+                                                value={otherCustomerRequirement}
+                                                onChange={(e) => {
+                                                    setOtherCustomerRequirement(e.target.value);
+                                                    setTimeout(() => validateEditModeFields(), 0);
+                                                }}
+                                                placeholder={t('chatbot.enterCustomerRequirement') || "Enter your requirement"}
+                                                className={`w-full mt-2 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.requirement && !otherCustomerRequirement.trim() ? 'border-red-500' : 'border-gray-300'}`}
+                                            />
+                                        )}
                                         {fieldErrors.requirement && (
                                             <p className="text-red-500 text-xs mt-1">{fieldErrors.requirement}</p>
                                         )}
@@ -2985,14 +3206,33 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                         <CustomDropdown
                                             value={editableCustomerRequirement}
                                             onChange={(value) => {
+                                                // If switching away from "Other", save the current value to ref
+                                                if (editableCustomerRequirement === '__OTHER__' && value !== '__OTHER__') {
+                                                    if (otherCustomerRequirement.trim()) {
+                                                        previousOtherRequirementRef.current = otherCustomerRequirement;
+                                                    }
+                                                }
+
                                                 setEditableCustomerRequirement(value);
+
+                                                // Restore previous value when switching to "Other", or clear when selecting a different option
+                                                if (value === '__OTHER__') {
+                                                    // Restore previous value if it exists and current is empty
+                                                    if (previousOtherRequirementRef.current && !otherCustomerRequirement.trim()) {
+                                                        setOtherCustomerRequirement(previousOtherRequirementRef.current);
+                                                    }
+                                                } else {
+                                                    // Clear manual input when selecting non-"Other" option
+                                                    setOtherCustomerRequirement('');
+                                                }
                                             }}
                                             options={[
                                                 { value: "", label: isLoadingCustomerIssues ? t('chatbot.loading') : t('chatbot.selectRequirement') },
                                                 ...customerIssues.map((issue) => ({
                                                     value: issue.customer_issue,
                                                     label: issue.customer_issue
-                                                }))
+                                                })),
+                                                { value: "__OTHER__", label: t('chatbot.otherOption') || "Other" }
                                             ]}
                                             placeholder={isLoadingCustomerIssues ? t('chatbot.loading') : t('chatbot.selectRequirement')}
                                             disabled={isLoadingCustomerIssues}
@@ -3000,6 +3240,16 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             searchable={true}
                                             searchPlaceholder="Search requirements..."
                                         />
+                                        {/* Manual input for "Other" option */}
+                                        {editableCustomerRequirement === '__OTHER__' && (
+                                            <input
+                                                type="text"
+                                                value={otherCustomerRequirement}
+                                                onChange={(e) => setOtherCustomerRequirement(e.target.value)}
+                                                placeholder={t('chatbot.enterCustomerRequirement') || "Enter your requirement"}
+                                                className={`w-full mt-2 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldErrors.requirement && !otherCustomerRequirement.trim() ? 'border-red-500' : 'border-gray-300'}`}
+                                            />
+                                        )}
                                         {fieldErrors.requirement && (
                                             <p className="text-red-500 text-xs mt-1">{fieldErrors.requirement}</p>
                                         )}
@@ -3045,7 +3295,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                         />
                                         <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                                     </div>
-                                    
+
                                     {/* Custom Calendar Dropdown */}
                                     {showDatePicker && (
                                         <div className="date-picker-container absolute z-50 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-4 w-full max-w-sm">
@@ -3077,7 +3327,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                     </svg>
                                                 </button>
                                             </div>
-                                            
+
                                             {/* Calendar Days Header */}
                                             <div className="grid grid-cols-7 gap-1 mb-2">
                                                 {(() => {
@@ -3099,7 +3349,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                     </div>
                                                 ))}
                                             </div>
-                                            
+
                                             {/* Calendar Days */}
                                             <div className="grid grid-cols-7 gap-1">
                                                 {(() => {
@@ -3111,14 +3361,14 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                     const [minYear, minMonth, minDay] = minDateStr.split('-').map(Number);
                                                     const minDate = new Date(minYear, minMonth - 1, minDay);
                                                     minDate.setHours(0, 0, 0, 0);
-                                                    
+
                                                     const days = [];
-                                                    
+
                                                     // Empty cells for days before first day of month
                                                     for (let i = 0; i < firstDay; i++) {
                                                         days.push(<div key={`empty-${i}`} className="h-8"></div>);
                                                     }
-                                                    
+
                                                     // Days of the month
                                                     for (let day = 1; day <= daysInMonth; day++) {
                                                         const date = new Date(calendarYear, calendarMonth, day);
@@ -3131,7 +3381,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                         // Disable today and past dates (only allow tomorrow onwards)
                                                         const isPast = date <= today;
                                                         const isSelected = selectedDate === dateString;
-                                                        
+
                                                         days.push(
                                                             <button
                                                                 key={day}
@@ -3144,11 +3394,11 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                                 disabled={isPast}
                                                                 className={`
                                                                     h-8 w-8 rounded-lg text-sm transition-colors
-                                                                    ${isPast 
-                                                                        ? 'text-gray-300 cursor-not-allowed' 
+                                                                    ${isPast
+                                                                        ? 'text-gray-300 cursor-not-allowed'
                                                                         : isSelected
-                                                                        ? 'bg-[#13486b] text-white font-semibold'
-                                                                        : 'text-gray-700 hover:bg-gray-100'
+                                                                            ? 'bg-[#13486b] text-white font-semibold'
+                                                                            : 'text-gray-700 hover:bg-gray-100'
                                                                     }
                                                                 `}
                                                             >
@@ -3156,13 +3406,13 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                                             </button>
                                                         );
                                                     }
-                                                    
+
                                                     return days;
                                                 })()}
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     {fieldErrors.date && (
                                         <p className="text-red-500 text-xs mt-1">{fieldErrors.date}</p>
                                     )}
@@ -3244,7 +3494,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             value={selectedAmPm}
                                             onChange={(ampm) => {
                                                 setSelectedAmPm(ampm);
-                                                
+
                                                 // Update time validation when AM/PM changes
                                                 if (selectedHour && selectedMinute) {
                                                     updateTimeFrom12Hour(selectedHour, selectedMinute, ampm);
@@ -3284,7 +3534,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                 {fieldErrors.address && (
                                     <p className="text-red-500 text-xs mb-2">{fieldErrors.address}</p>
                                 )}
-                                
+
                                 {/* Viability Error */}
                                 {viabilityError && (
                                     <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm mb-2 flex items-center gap-2">
@@ -3292,7 +3542,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                         {viabilityError}
                                     </div>
                                 )}
-                                
+
                                 {/* Viability Checking Indicator */}
                                 {isCheckingViability && (
                                     <div className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-md text-sm mb-2 flex items-center gap-2">
@@ -3303,75 +3553,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
 
                                 {/* Two columns: Left details, Right search + map */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
-                                    {/* First Column: Address details (full address + fields) */}
-                                    <div className="flex flex-col min-h-0 h-full">
-                                        {/* Manual Full Address Input */}
-                                        <div className="mb-2">
-                                            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                                                {t('chatbot.fullAddress') || 'Full Address'} <span className="text-red-500">*</span>
-                                                <InfoTooltip text={t('chatbot.addressInstruction') || 'Search for an address or type the full address manually.'} />
-                                            </label>
-                                            <textarea
-                                                rows={3}
-                                                value={editableFullAddress}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    setEditableFullAddress(val);
-                                                    setAppointmentLocation((prev) => ({ ...prev, address: val }));
-                                                }}
-                                                placeholder={t('chatbot.fullAddress') || 'Enter full address'}
-                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                            />
-                                        </div>
-                            <p className="text-xs text-gray-500 mb-2">
-                                {t('chatbot.coordinates')} {appointmentLocation.lat != null ? Number(appointmentLocation.lat).toFixed(6) : t('appointments.na')}, {appointmentLocation.lng != null ? Number(appointmentLocation.lng).toFixed(6) : t('appointments.na')}
-                            </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressHouseNumber') || 'House Number'}</label>
-                                    <input
-                                        type="text"
-                                        value={editableHouseNumber}
-                                        onChange={(e) => setEditableHouseNumber(e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressSector') || 'Sector'}</label>
-                                    <input
-                                        type="text"
-                                        value={editableSector}
-                                        onChange={(e) => setEditableSector(e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressCity') || 'City'}</label>
-                                    <input
-                                        type="text"
-                                        value={editableCity}
-                                        readOnly
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressState') || 'State'}</label>
-                                    <input
-                                        type="text"
-                                        value={editableState}
-                                        readOnly
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-                                    />
-                                </div>
-                            </div>
-
-                                {/* Selected Address Display (address already shown in input; show only guidance) */}
-                                <div className="flex-1 min-h-0 overflow-y-auto">
-                                    <p className="text-xs text-gray-500">
-                                        {t('chatbot.mapInstructions')}
-                                    </p>
-                                </div>
-                                    </div>
+                                   
 
                                     {/* Second Column: Search + Map */}
                                     <div className="relative min-h-0 flex flex-col gap-2 h-full">
@@ -3385,11 +3567,11 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             <SearchBox
                                                 accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
                                                 options={{
-                                                    language: language,
+                                                    // language: language,
                                                     country: 'VE',
                                                     limit: 5,
-                                                    types: ['address', 'place', 'locality', 'district',  'country', 'region'],
-                                                   
+                                                    types: ['place', 'locality', 'region'],
+
                                                 }}
 
                                                 value={appointmentSearchAddress}
@@ -3417,6 +3599,75 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                             className="w-full flex-1 min-h-[16rem] rounded-lg border border-gray-300"
                                         />
                                     </div>
+                                     {/* First Column: Address details (full address + fields) */}
+                                     <div className="flex flex-col min-h-0 h-full">
+                                        {/* Manual Full Address Input */}
+                                        <div className="mb-2 ">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                                {t('chatbot.fullAddress') || 'Full Address'} <span className="text-red-500">*</span>
+                                                <InfoTooltip text={t('chatbot.fullladdressInnstrcution') || 'Search for an address or type the full address manually.'} />
+                                            </label>
+                                            <textarea
+                                                rows={3}
+                                                value={editableFullAddress}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setEditableFullAddress(val);
+                                                    setAppointmentLocation((prev) => ({ ...prev, address: val }));
+                                                }}
+                                                placeholder={t('chatbot.fullAddress') || 'Enter full address'}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-500 mb-2">
+                                            {t('chatbot.coordinates')} {appointmentLocation.lat != null ? Number(appointmentLocation.lat).toFixed(6) : t('appointments.na')}, {appointmentLocation.lng != null ? Number(appointmentLocation.lng).toFixed(6) : t('appointments.na')}
+                                        </p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressHouseNumber') || 'House Number'}</label>
+                                                <input
+                                                    type="text"
+                                                    value={editableHouseNumber}
+                                                    onChange={(e) => setEditableHouseNumber(e.target.value)}
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressSector') || 'Sector'}</label>
+                                                <input
+                                                    type="text"
+                                                    value={editableSector}
+                                                    onChange={(e) => setEditableSector(e.target.value)}
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressCity') || 'City'}</label>
+                                                <input
+                                                    type="text"
+                                                    value={editableCity}
+                                                    readOnly
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">{t('chatbot.addressState') || 'State'}</label>
+                                                <input
+                                                    type="text"
+                                                    value={editableState}
+                                                    readOnly
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Selected Address Display (address already shown in input; show only guidance) */}
+                                        <div className="flex-1 min-h-0 overflow-y-auto">
+                                            <p className="text-xs text-gray-500">
+                                                {t('chatbot.mapInstructions')}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3429,7 +3680,8 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                                     const hasDate = selectedDate && isFutureDate(selectedDate);
                                     const hasTime = selectedTime || (selectedHour && selectedMinute);
                                     const hasAddress = appointmentLocation.lat && appointmentLocation.lng;
-                                    const hasRequirement = editableCustomerRequirement.trim();
+                                    const hasRequirement = editableCustomerRequirement.trim() &&
+                                        (editableCustomerRequirement !== '__OTHER__' || otherCustomerRequirement.trim());
 
                                     if (!hasDate || !hasTime || !hasAddress || !hasRequirement) return true;
 
@@ -3570,7 +3822,7 @@ export default function ChatbotWidget({ onAppointmentCreated, chatbotId: propCha
                         {/* Header */}
                         <div className="bg-red-500 text-white p-4 flex justify-between items-center rounded-t-lg">
                             <h3 className="text-lg font-bold flex items-center gap-2">
-                                { 'Error'}
+                                {'Error'}
                             </h3>
                             <button
                                 onClick={() => setShowErrorDialog(false)}
